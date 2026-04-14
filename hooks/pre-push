@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Pre-push hook - runs security then validation before push
+# Usage: Run this script before git push
+
+set -e
+
+echo "🔍 Running pre-push checks..."
+
+# Step 1: Run security checks first
+echo ""
+echo "=== Security Check ==="
+./hooks/security || { echo "❌ Security check failed"; exit 1; }
+
+# Step 2: Run validation
+echo ""
+echo "=== Validation ==="
+./hooks/pre-commit || { echo "❌ Validation failed"; exit 1; }
+
+echo ""
+echo "✅ All pre-push checks passed!"
+exit 0

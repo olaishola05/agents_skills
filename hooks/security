@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# Security hook - checks for secrets and security issues before push
+# Usage: Run this before ./hooks/pre-commit
+
+set -e
+
+echo "🔒 Running security checks..."
+
+# Check for secrets
+check_secrets() {
+    echo "  📦 Checking for secrets..."
+    
+    local SECRET_FOUND=0
+    local FILES
+    
+    # Get staged files
+    if git rev-parse --verify HEAD >/dev/null 2>&1; then
+        FILES=$(git diff --cached --name-only)
+    else
+        FILES=$(git ls-files)
+    fi
+    
+    for file in $FILES; do
+        [ -f "$file" ] || continue
+        
+        # Skip binary and common ignore patterns
+        [[ "$file" =~ \.(png|jpg|jpeg|gif|ico|svg|woff|ttf|eot|mp3|mp4|webm|pdf|zip)$ ]] && continue
+        [[ "$file" =~ node_modules|\.git|dist|build|\.venv ]] && continue
+        
+        # Check for API keys and secrets
+        if grep -E -i "(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token|password|private[_-]?key|aws[_-]?secret|stripe[_-]?key)" "$file" 2>/dev/null | grep -v -E "(your|placeholder|xxx|<|dummy|example|test|123)" >/dev/null; then
+            echo "  ⚠️  Possible secrets in: $file"
+            SECRET_FOUND=1
+        fi
+    done
+    
+    if [ $SECRET_FOUND -eq 1 ]; then
+        echo "  ❌ Secrets detected! Please remove secrets and re-stage files."
+        exit 1
+    fi
+    
+    echo "  ✅ No secrets detected"
+}
+
+# Check for large files
+check_large_files() {
+    echo "  📦 Checking for large files..."
+    
+    local LARGE_FOUND=0
+    
+    if git rev-parse --verify HEAD >/dev/null 2>&1; then
+        for file in $(git diff --cached --name-only); do
+            [ -f "$file" ] || continue
+            size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0)
+            if [ "$size" -gt 10000000 ]; then
+                echo "  ⚠️  Large file detected (>10MB): $file ($(echo "scale=2; $size/1000000" | bc)MB)"
+                LARGE_FOUND=1
+            fi
+        done
+    fi
+    
+    if [ $LARGE_FOUND -eq 1 ]; then
+        echo "  ⚠️  Consider using Git LFS for large files"
+    else
+        echo "  ✅ No large files"
+    fi
+}
+
+# Check for .env files
+check_env_files() {
+    echo "  📦 Checking for .env files..."
+    
+    if git rev-parse --verify HEAD >/dev/null 2>&1; then
+        local ENV_STAGED=$(git diff --cached --name-only | grep -E "^\.env" || true)
+        if [ -n "$ENV_STAGED" ]; then
+            echo "  ⚠️  .env files staged:"
+            echo "$ENV_STAGED" | while read f; do
+                echo "    - $f"
+            done
+            echo "  ⚠️  Make sure .env files contain only placeholders, not real secrets!"
+        else
+            echo "  ✅ No .env files staged"
+        fi
+    fi
+}
+
+# Run checks
+check_secrets
+check_large_files
+check_env_files
+
+echo "✅ All security checks passed!"
+exit 0

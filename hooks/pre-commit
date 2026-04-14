@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Pre-commit hook - runs validation before commit
+# Usage: Run this script before git commit
+
+set -e
+
+echo "🔍 Running pre-commit validation..."
+
+# Detect stack
+detect_stack() {
+    if [ -f "package.json" ]; then
+        echo "node"
+    elif [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
+        echo "python"
+    elif [ -f "Gemfile" ]; then
+        echo "ruby"
+    elif [ -f "go.mod" ]; then
+        echo "go"
+    elif [ -f "Cargo.toml" ]; then
+        echo "rust"
+    else
+        echo "unknown"
+    fi
+}
+
+STACK=$(detect_stack)
+echo "📦 Detected stack: $STACK"
+
+run_validation() {
+    case "$STACK" in
+        node)
+            echo "📦 Running Node.js validation..."
+            npm run lint || { echo "❌ Lint failed"; exit 1; }
+            npm run typecheck || { echo "❌ Typecheck failed"; exit 1; }
+            npm run test || { echo "❌ Tests failed"; exit 1; }
+            npm run build || { echo "❌ Build failed"; exit 1; }
+            ;;
+        python)
+            echo "🐍 Running Python validation..."
+            ruff check . || { echo "❌ Lint failed"; exit 1; }
+            mypy . || { echo "❌ Type check failed"; exit 1; }
+            pytest || { echo "❌ Tests failed"; exit 1; }
+            python -m py_compile . || { echo "❌ Syntax check failed"; exit 1; }
+            ;;
+        ruby)
+            echo "💎 Running Ruby validation..."
+            rubocop || { echo "❌ Lint failed"; exit 1; }
+            bundle exec rspec || { echo "❌ Tests failed"; exit 1; }
+            ;;
+        go)
+            echo "🐹 Running Go validation..."
+            golangci-lint run || { echo "❌ Lint failed"; exit 1; }
+            go vet ./... || { echo "❌ Vet failed"; exit 1; }
+            go test ./... || { echo "❌ Tests failed"; exit 1; }
+            go build ./... || { echo "❌ Build failed"; exit 1; }
+            ;;
+        *)
+            echo "⚠️ Unknown stack, skipping validation"
+            ;;
+    esac
+}
+
+run_validation
+
+echo "✅ All validations passed!"
+exit 0
