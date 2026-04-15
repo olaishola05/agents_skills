@@ -24,28 +24,49 @@ Example:
 
 ## Process
 
-### Step 1: Understand
+### Step 1: Notify User
 
+When called to build a feature:
+
+```
+First calling agent-tdd to write tests for [feature]...
+```
+
+This notifies user that TDD approach is being used.
+
+### Step 2: Call agent-tdd
+
+Automatically call agent-tdd to write tests first:
+
+```
+agent-tdd: Write tests for [feature description]
+```
+
+This creates the test file(s) based on the feature requirements.
+
+### Step 3: Understand
+
+After tests are ready, read existing codebase:
 - Read existing codebase structure
 - Identify relevant files
 - Check for existing patterns/conventions
-- Ask clarifying questions if needed
 
-### Step 2: Plan
+### Step 4: Plan
 
 - Create a simple implementation plan
 - Identify files to modify/create
 - List dependencies and interfaces
 - Get user approval before proceeding
 
-### Step 3: Implement
+### Step 5: Implement
 
-- Write the code
+Write the code that passes the tests:
+- Follow test-driven development: write code to make tests pass
 - Follow existing conventions
 - Add comments for complex logic
 - Include proper error handling
 
-### Step 4: Validate
+### Step 6: Validate
 
 Run validation using pre-commit hook:
 
@@ -61,7 +82,7 @@ This runs stack-appropriate validation:
 
 If validation fails → fix → re-run hook → repeat
 
-### Step 5: Commit
+### Step 7: Commit
 
 Using /commit or directly:
 
@@ -93,11 +114,37 @@ To run hooks:
 ./hooks/pre-push     # Run before push
 ```
 
+## TDD is Automatic
+
+When agent-code is called, it automatically:
+1. Notifies user: "First calling agent-tdd to write tests..."
+2. Calls agent-tdd to write tests first
+3. Implements the feature based on tests
+4. Validates with pre-commit hook
+
+This ensures all features are built test-first.
+
 ## Options
 
 - `--no-commit`: Don't create commit
-- `--test-first`: Write tests before implementation (TDD mode)
+- `--skip-tdd`: Skip TDD and just write code
 - `--watch`: Run tests in watch mode during implementation
+
+## Integration with agent-tdd
+
+This agent automatically integrates with agent-tdd:
+
+```
+User: /agent-code add login page
+→ agent-code: First calling agent-tdd to write tests for login page...
+→ agent-tdd: [Writes tests...]
+→ agent-code: Tests ready. Implementing login page...
+→ agent-code: [Implements feature...]
+→ agent-code: Running pre-commit validation...
+→ agent-code: Complete.
+```
+
+This ensures TDD is always followed.
 
 ## Best Practices
 
@@ -105,6 +152,7 @@ To run hooks:
 - Validate frequently
 - Ask for feedback early
 - Don't over-engineer
+- Always write tests first (automatic)
 
 ## Aliases
 
