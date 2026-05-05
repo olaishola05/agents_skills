@@ -60,14 +60,31 @@ Example for Apple:
 https://raw.githubusercontent.com/olaishola05/awesome-design-md/main/design-md/apple/DESIGN.md
 ```
 
-### Step 4: Copy to Project
+### Step 4: Save the Design System
 
-Create directory and copy DESIGN.md:
+Follow this exact save order — always project first, then global repo.
+
+**Step 4a — Save to current project (always)**
 
 ```bash
 mkdir -p resources/design
-# Copy DESIGN.md content to resources/design/[company-name].md
+# Save as resources/design/[brand-name].md
+# Brand name = lowercase brand (e.g., airbnb.md, stripe.md, notion.md)
 ```
+
+**Step 4b — Save to awesome-design-md global repo (if not already there)**
+
+Check if the brand already exists:
+```
+https://raw.githubusercontent.com/olaishola05/awesome-design-md/main/design-md/[brand-name]/DESIGN.md
+```
+
+- If it returns a **404** → the brand is new. Save a copy to the local clone of `awesome-design-md` at:
+  `design-md/[brand-name]/DESIGN.md`
+  Then instruct the user: *"New brand saved. Push to awesome-design-md when ready: `cd ~/path/to/awesome-design-md && git add . && git commit -m 'feat: add [brand-name] design system' && git push`"*
+- If it **already exists** → skip Step 4b. The project copy in `resources/design/` is sufficient.
+
+**Naming Convention**: Always use lowercase brand name (e.g., `airbnb.md`, `stripe.md`, `linear.md`, `refero-glass.md`).
 
 ### Step 5: Build Frontend
 
@@ -163,19 +180,21 @@ Building login page with refined minimal aesthetic...
 | **Fintech** | Stripe, Coinbase, Wise, Revolut |
 | **AI** | Claude, OpenCode, Cohere |
 
-## File Placement
+## File Placement & Naming
 
-When using design system, copied DESIGN.md goes to:
-```
-resources/design/[company-name].md
-```
+Always name by **lowercase brand name**:
 
-Example:
 ```
 resources/design/apple.md
 resources/design/stripe.md
-resources/design/figma.md
+resources/design/airbnb.md
+resources/design/linear.md
+resources/design/refero-glass.md   ← Refero styles use refero-[mood].md
 ```
+
+**Save Order (always follow this)**:
+1. `resources/design/[brand].md` → current project (always)
+2. `awesome-design-md/design-md/[brand]/DESIGN.md` → global repo (only if brand is new)
 
 ## Integration
 
