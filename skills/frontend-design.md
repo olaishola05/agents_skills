@@ -12,19 +12,21 @@ Create distinctive, production-grade frontend interfaces with high design qualit
 
 If user specifies a design system, use the custom workflow:
 
-### Step 1: Ask User
+### Step 1: Ask User for Design System Source
 
-Ask: "Which design system?"
+Ask: "Do you have a specific design system in mind, or would you like to browse **Refero Styles**?"
 
 Show available options:
-- Apple (Premium white space, SF Pro)
-- Stripe (Signature purple)
-- Figma (Vibrant multi-color)
-- Linear (Ultra-minimal, purple accent)
-- Vercel (Black and white, Geist font)
-- Notion (Warm minimalism, serif headings)
-- Spotify (Green on dark)
-- Or say "auto-detect" for PRD-based recommendation
+1. **Browse Refero Styles**: Tell the user to visit `https://styles.refero.design/` to find a curated library of colors, typography, spacing, and component patterns from top websites. Ask them to share the URL of the style they like.
+2. **Use Static Repo**: Pick from the built-in awesome-design-md repository:
+   - Apple (Premium white space, SF Pro)
+   - Stripe (Signature purple)
+   - Figma (Vibrant multi-color)
+   - Linear (Ultra-minimal, purple accent)
+   - Vercel (Black and white, Geist font)
+   - Notion (Warm minimalism, serif headings)
+   - Spotify (Green on dark)
+3. **Auto-detect**: Let the AI recommend one based on the PRD.
 
 ### Step 2: Offer Auto-Detect
 
@@ -45,7 +47,11 @@ When analyzing PRD:
 
 ### Step 3: Fetch DESIGN.md
 
-Design System Repo: https://github.com/olaishola05/awesome-design-md
+**Option A: From Refero Styles (Dynamic)**
+If the user provides a Refero URL (e.g., from `https://styles.refero.design/`), use your web reading tools to fetch the page content and extract the `DESIGN.md` rules (colors, typography, spacing, patterns) from it.
+
+**Option B: From Static Repo**
+Design System Repo: `https://github.com/olaishola05/awesome-design-md`
 
 Fetch from: `https://raw.githubusercontent.com/olaishola05/awesome-design-md/main/design-md/[company-name]/DESIGN.md`
 
@@ -117,10 +123,19 @@ Remember: Claude is capable of extraordinary creative work. Don't hold back, sho
 
 ## Usage Examples
 
-### With Design System
+### With Refero Styles (Dynamic)
 ```
 User: Build a login page
-Skill: Which design system? Apple, Stripe, Figma, Linear, Auto-detect?
+Skill: Do you have a specific design system in mind, or would you like to browse Refero Styles (https://styles.refero.design/)?
+User: I like this one: https://styles.refero.design/...
+Skill: *Reads URL, extracts the DESIGN.md context → Copies to ./resources/design/refero-style.md*
+Building login page with the extracted Refero style...
+```
+
+### With Static Design System
+```
+User: Build a login page
+Skill: Do you have a specific design system in mind? Apple, Stripe, Figma, Linear, Auto-detect?
 User: Apple
 Skill: *Downloads Apple DESIGN.md → Copies to ./resources/design/apple.md*
 Building login page with Apple Human Interface Guidelines...
