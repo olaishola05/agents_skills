@@ -64,6 +64,9 @@ All must pass before completing:
 2. **Linting**: Code follows style
 3. **Types**: No type errors
 4. **All tests**: Full test suite passes
+5. **Integration Coverage**: If the feature affects routing, session gating, or page-level navigation:
+   - You must write integration tests checking the redirect flow.
+   - You must verify that the entry pages (like `/dashboard`) correctly invoke and respond to the gating logic.
 
 ## Hooks Reference
 

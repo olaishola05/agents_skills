@@ -47,6 +47,7 @@ Break the phase into ordered, atomic implementation tasks.
 - Each task must map to at least one acceptance criterion
 - Tasks should be narrow and independently testable
 - If a task would touch more than 3–4 files, split it further
+- **Integration Task Requirement**: Any phase containing routing, layouts, or authentication gating MUST include an explicit integration task to wire and test redirects on existing pages.
 
 ### Step 4: Present Task Breakdown
 
