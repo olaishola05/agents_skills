@@ -15,7 +15,7 @@ echo "=== Security Check ==="
 # Step 2: Run validation
 echo ""
 echo "=== Validation ==="
-./hooks/pre-commit || { echo "❌ Validation failed"; exit 1; }
+./hooks/pre-commit --build || { echo "❌ Validation failed"; exit 1; }
 
 echo ""
 echo "✅ All pre-push checks passed!"
