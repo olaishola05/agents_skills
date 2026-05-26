@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Phase 4 Quality Gate Script
+# Usage:
+#   ./hooks/phase4             → loads git diff for AI to review in a single pass
+#   ./hooks/phase4 --sign-off  → writes .phase4-signoff with current HEAD hash
+
+set -e
+
+SIGNOFF_FILE=".phase4-signoff"
+ACTION="${1:-}"
+
+# ─── Sign-off mode ────────────────────────────────────────────────────────────
+if [ "$ACTION" == "--sign-off" ]; then
+    HEAD_HASH=$(git rev-parse --short HEAD)
+    DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    cat > "$SIGNOFF_FILE" << EOF
+COMMIT: $HEAD_HASH
+DATE: $DATE
+REVIEWS: agent-review, smell, docs
+EOF
+    echo ""
+    echo "✅ Phase 4 sign-off written for commit $HEAD_HASH"
+    echo "   Next steps:"
+    echo "   1. git add .phase4-signoff"
+    echo "   2. git commit -m 'chore: phase4 sign-off for $HEAD_HASH'"
+    echo "   3. git push"
+    exit 0
+fi
+
+# ─── Review mode (default) ────────────────────────────────────────────────────
+# Resolve base branch
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed "s@^refs/remotes/@@")
+[ -z "$BASE" ] && BASE="origin/main"
+git rev-parse "$BASE" >/dev/null 2>&1 || BASE="main"
+
+echo "┌─────────────────────────────────────────────────────────────────┐"
+echo "│  Phase 4 Quality Review                                         │"
+echo "│  Single-pass diff loaded for: smell · review · docs             │"
+echo "└─────────────────────────────────────────────────────────────────┘"
+echo ""
+echo "Base branch : $BASE"
+echo "HEAD        : $(git rev-parse --short HEAD)"
+echo ""
+echo "━━━ Changed Files ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+git diff --stat "$BASE"...HEAD
+echo ""
+echo "━━━ Full Diff (-U10) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+git diff -U10 "$BASE"...HEAD
+echo ""
+echo "━━━ End of Diff ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "AI: now run your single-pass Phase 4 review (smell + review + docs)"
+echo "    then run: ./hooks/phase4 --sign-off"

@@ -42,6 +42,7 @@ This is the end-to-end workflow for building software using your AI toolkit. You
 | Command | When to use it | What it does |
 | :--- | :--- | :--- |
 | `/agent-review` | Before opening a PR | The AI does a full "senior engineer" manual code review. |
+| `/smell` | Checking code architecture | Scans the git diff against Clean Code and GoF design patterns to identify architectural smells. |
 | `/security-audit` | Before a major release | Runs an adversarial red-team scan for injection flaws or logic bugs. |
 | `/optimize` | If performance is a concern | Scans code for memory leaks, O(n²) loops, or caching opportunities. |
 | `/docs` | Before merging | Generates JSDoc/docstrings for all new functions. |

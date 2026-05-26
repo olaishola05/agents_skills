@@ -7,6 +7,37 @@ set -e
 
 echo "🔍 Running pre-push checks..."
 
+# Step 0: Phase 4 quality gate
+echo ""
+echo "=== Phase 4 Quality Gate ==="
+
+SIGNOFF_FILE=".phase4-signoff"
+
+if [ ! -f "$SIGNOFF_FILE" ]; then
+  echo "❌ Push blocked. No .phase4-signoff file found."
+  echo "   Run ./hooks/phase4 then ./hooks/phase4 --sign-off before pushing."
+  exit 1
+fi
+
+SIGNED_COMMIT=$(grep "^COMMIT:" "$SIGNOFF_FILE" | awk '{print $2}')
+
+# Resolve base branch
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed "s@^refs/remotes/@@")
+[ -z "$BASE" ] && BASE="origin/main"
+git rev-parse "$BASE" >/dev/null 2>&1 || BASE="main"
+
+# Check signed commit exists in this push range
+if ! git log --format="%H" "$BASE"..HEAD 2>/dev/null | grep -q "^$SIGNED_COMMIT" && \
+   ! git log --format="%h" "$BASE"..HEAD 2>/dev/null | grep -q "^$SIGNED_COMMIT"; then
+  echo "❌ Push blocked. Sign-off is for commit $SIGNED_COMMIT"
+  echo "   but that commit is not in this push range."
+  echo "   New commits exist since Phase 4 was last run."
+  echo "   Run ./hooks/phase4 then ./hooks/phase4 --sign-off again."
+  exit 1
+fi
+
+echo "✅ Phase 4 sign-off verified for commit $SIGNED_COMMIT"
+
 # Step 1: Run security checks first
 echo ""
 echo "=== Security Check ==="
