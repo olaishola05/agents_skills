@@ -91,6 +91,8 @@ After scaffolding:
 3. Run typecheck: `npm run typecheck`
 4. Run tests: `npm run test`
 5. Verify dev server starts: `npm run dev`
+6. **Wire AI workflow**: `~/.config/agents_skills/scripts/init-project.sh`
+   (Creates symlinks, AGENTS.md, CONTEXT.md, WORKFLOW.md, and activates git hooks)
 
 ## Options
 

@@ -57,6 +57,8 @@ After scaffolding:
 2. Run linter: `rubocop`
 3. Run tests: `bundle exec rspec`
 4. Verify database: `rails db:setup`
+5. **Wire AI workflow**: `~/.config/agents_skills/scripts/init-project.sh`
+   (Creates symlinks, AGENTS.md, CONTEXT.md, WORKFLOW.md, and activates git hooks)
 
 ## Options
 

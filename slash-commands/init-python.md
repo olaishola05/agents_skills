@@ -69,6 +69,8 @@ After scaffolding:
 3. Run type check: `mypy .`
 4. Run tests: `pytest`
 5. Verify syntax: `python -m py_compile .`
+6. **Wire AI workflow**: `~/.config/agents_skills/scripts/init-project.sh`
+   (Creates symlinks, AGENTS.md, CONTEXT.md, WORKFLOW.md, and activates git hooks)
 
 ## Options
 

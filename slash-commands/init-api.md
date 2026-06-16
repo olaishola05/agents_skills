@@ -672,6 +672,8 @@ After scaffolding:
 3. Run typecheck: `npm run typecheck` or `mypy .` or `go build`
 4. Run tests: `npm run test` or `pytest` or `go test ./...`
 5. Verify build: `npm run build` or `python -m py_compile .` or `go build -o bin/server`
+6. **Wire AI workflow**: `~/.config/agents_skills/scripts/init-project.sh`
+   (Creates symlinks, AGENTS.md, CONTEXT.md, WORKFLOW.md, and activates git hooks)
 
 ## Best Practices
 
