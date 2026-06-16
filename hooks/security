@@ -36,11 +36,24 @@ check_secrets() {
         # Skip the hooks/ dir — scripts define detection patterns and will always match themselves
         [[ "$file" =~ ^hooks/ ]] && continue
         
+        # Skip files listed in .securityignore
+        if [ -f ".securityignore" ] && grep -v '^#' .securityignore | grep -q "^$file$" 2>/dev/null; then
+            echo "  ⏭️  Skipping ignored file: $file"
+            continue
+        fi
+        
         # Check for API keys and secrets
         # Exclusions: placeholder values, examples, test values, inline 'not a real secret' markers
-        if grep -E -i "(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token|password|private[_-]?key|aws[_-]?secret|stripe[_-]?key)" "$file" 2>/dev/null \
-           | grep -v -E "(your|placeholder|xxx|<|dummy|example|test|123|not a real|EXAMPLE|_EXAMPLE|_PLACEHOLDER|_HERE)" > /dev/null; then
+        local MATCHES
+        MATCHES=$(grep -E -n -i "(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token|password|private[_-]?key|aws[_-]?secret|stripe[_-]?key)" "$file" 2>/dev/null \
+           | grep -v -E "(your|placeholder|xxx|<|dummy|example|test|123|not a real|EXAMPLE|_EXAMPLE|_PLACEHOLDER|_HERE)" || true)
+        
+        if [ -n "$MATCHES" ]; then
             echo "  ⚠️  Possible secrets in: $file"
+            # Log each matching line with an indent for readability
+            echo "$MATCHES" | while read -r line; do
+                echo "      🔍 Line $line"
+            done
             SECRET_FOUND=1
         fi
     done
