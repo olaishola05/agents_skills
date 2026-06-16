@@ -42,37 +42,60 @@ Example:
 - Ensure tests still pass
 - Add edge case tests if needed
 
-### Step 4: Validate
+### Step 4: Validate (Targeted — AI Side Only)
 
-Run validation using pre-commit hook:
+> **⚠️ TOKEN RULE — NEVER run the global test suite inside the AI terminal.**
+> Running `./hooks/pre-commit` or `pnpm run test` floods the conversation with all
+> test output, exhausting tokens in minutes. Always use **targeted, file-isolated** commands.
+
+Run **only the specific test file** you just wrote:
 
 ```bash
-./hooks/pre-commit
+# Node.js (vitest)
+npx vitest run path/to/my-feature.test.ts
+
+# Python
+pytest path/to/test_my_feature.py -v
+
+# Go
+go test ./path/to/package/...
 ```
 
-This runs stack-appropriate validation:
-- **Node.js**: lint → typecheck → test → build
-- **Python**: ruff → mypy → pytest
-- **Ruby**: rubocop → rspec
-- **Go**: golangci-lint → vet → test
+Once the targeted test is GREEN, **stop**. Tell the user:
+
+```
+✅ Test passed. Please run locally to validate the full suite:
+   ./hooks/pre-commit
+```
+
+The full `./hooks/pre-commit` sweep (lint → typecheck → all tests → build) runs on the
+**user's local machine only** — never inside the AI conversation loop.
 
 ## Validation Gates
 
-All must pass before completing:
+### AI-Side Gates (run inside the conversation)
 
-1. **Test coverage**: New code has tests
-2. **Linting**: Code follows style
-3. **Types**: No type errors
-4. **All tests**: Full test suite passes
-5. **Integration Coverage**: If the feature affects routing, session gating, or page-level navigation:
-   - You must write integration tests checking the redirect flow.
-   - You must verify that the entry pages (like `/dashboard`) correctly invoke and respond to the gating logic.
+1. **Targeted test**: Run only `npx vitest run path/to/file.test.ts` (or equivalent). GREEN = done.
+2. **Integration Coverage**: If the feature touches routing, session gating, or page-level navigation:
+   - Write integration tests that assert redirect flow.
+   - Verify entry pages (e.g. `/dashboard`) invoke and respond to gating logic correctly.
+
+### User-Side Gates (run locally, NEVER inside AI context)
+
+3. **Linting**: `pnpm run lint`
+4. **Type check**: `pnpm run typecheck`
+5. **Full test suite**: `pnpm run test` (all tests pass)
+6. **Build**: `pnpm run build` (optional, on pre-push)
+
+All user-side gates are enforced automatically by `./hooks/pre-commit` on the local machine.
 
 ## Hooks Reference
 
-| Hook | File | Runs |
-|------|------|------|
-| pre-commit | `hooks/pre-commit` | Validation before commit |
+| Hook | Runs Where | What it does |
+|------|------------|------|
+| `npx vitest run path/to/file.test.ts` | **AI terminal** ✅ | Targeted — one test file only |
+| `./hooks/pre-commit` | **User's machine** 🖥 | Full sweep: lint → type → all tests |
+| `./hooks/pre-push` | **User's machine** 🖥 | Secrets scan + pre-commit |
 
 ## Options
 

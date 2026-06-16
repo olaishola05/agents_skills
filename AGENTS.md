@@ -2,6 +2,24 @@
 
 High-signal context for working in this repository.
 
+---
+
+## ⚠️ TOKEN SAFETY RULE — Read First
+
+This workflow is optimized to conserve AI conversation tokens. The single biggest source of token waste is running the **full test suite** inside the AI terminal, which dumps thousands of lines of output into the conversation context.
+
+| Action | Where it runs | Why |
+|--------|--------------|-----|
+| `npx vitest run path/to/file.test.ts` | **AI terminal** ✅ | Targeted — minimal output, safe |
+| `pnpm run test` / `./hooks/pre-commit` | **User's machine** 🖥 | Full suite — runs locally only |
+
+**Rule:** After every Green (passing targeted test), the AI **stops** and tells the user:
+> "Please run `./hooks/pre-commit` locally before committing."
+
+The git hooks enforce the full quality gate automatically on the user's machine.
+
+---
+
 ## What This Repo Is
 
 Personal development system containing reusable slash commands, skills, agents, and automated hooks for AI-assisted development. Works with OpenCode, Claude Code, and Cursor.
@@ -15,15 +33,15 @@ Personal development system containing reusable slash commands, skills, agents, 
 
 ## Hooks
 
-| Hook | Runs |
-|------|------|
-| `pre-commit` | lint → typecheck → test → build |
-| `pre-push` | security → pre-commit |
-| `security` | Secrets detection only |
+| Hook | Runs Where | What it does |
+|------|------------|------|
+| `pre-commit` | User's machine 🖥 | lint → typecheck → all tests → build |
+| `pre-push` | User's machine 🖥 | security scan → pre-commit |
+| `security` | User's machine 🖥 | Secrets detection only |
 
-Run manually: `./hooks/pre-commit`, `./hooks/pre-push`, `./hooks/security`
+Run manually on your machine: `./hooks/pre-commit`, `./hooks/pre-push`, `./hooks/security`
 
-Skip: `git commit --no-verify`, `git push --no-verify` (not recommended)
+Skip (not recommended): `git commit --no-verify`, `git push --no-verify`
 
 ## Commands with `--prd` Flag
 

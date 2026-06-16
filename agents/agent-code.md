@@ -66,21 +66,34 @@ Write the code that passes the tests:
 - Add comments for complex logic
 - Include proper error handling
 
-### Step 6: Validate
+### Step 6: Validate (Targeted — AI Side Only)
 
-Run validation using pre-commit hook:
+> **⚠️ TOKEN RULE — NEVER run `./hooks/pre-commit` or `pnpm run test` inside the AI terminal.**
+> Running the full test suite dumps every test log into your conversation, exhausting
+> tokens in minutes. Always use **targeted, file-isolated** test commands.
+
+Run **only the specific test file** you just created:
 
 ```bash
-./hooks/pre-commit
+# Node.js (vitest)
+npx vitest run path/to/my-feature.test.ts
+
+# Python
+pytest path/to/test_my_feature.py -v
+
+# Go
+go test ./path/to/package/...
 ```
 
-This runs stack-appropriate validation:
-- **Node.js**: lint → typecheck → test → build
-- **Python**: ruff → mypy → pytest
-- **Ruby**: rubocop → rspec
-- **Go**: golangci-lint → vet → test
+Once the targeted test is GREEN, **stop and tell the user**:
 
-If validation fails → fix → re-run hook → repeat
+```
+✅ Tests passed: path/to/my-feature.test.ts
+Please run locally to validate the full suite before committing:
+   ./hooks/pre-commit
+```
+
+If the targeted test fails → fix the implementation → re-run the same targeted command → repeat.
 
 ### Step 7: Commit
 
@@ -93,26 +106,26 @@ git commit -m "[message]"
 
 ## Validation Gates
 
-Before completing, all must pass:
+### AI-Side Gates (inside the conversation)
 
-1. **Linting**: Code follows style guidelines
-2. **Type check**: No type errors
-3. **Tests**: All tests pass
-4. **Build**: Project builds successfully
+1. **Targeted test** — `npx vitest run path/to/file.test.ts`. Must be GREEN before stopping.
+2. **Type narrows** — only run `pnpm exec tsc --noEmit` if you are debugging a type error.
+   Never run it speculatively; the output is large.
+
+### User-Side Gates (on the local machine, enforced by hooks)
+
+3. **Linting** — `pnpm run lint`
+4. **Type check** — `pnpm run typecheck`
+5. **Full test suite** — `pnpm run test`
+6. **Build** — `pnpm run build` (triggered automatically on `git push` via `pre-push`)
 
 ## Hooks Reference
 
-| Hook | File | Runs |
-|------|------|------|
-| pre-commit | `hooks/pre-commit` | Validation before commit |
-| pre-push | `hooks/pre-push` | Secrets check + validation |
-
-To run hooks:
-
-```bash
-./hooks/pre-commit    # Run before commit
-./hooks/pre-push     # Run before push
-```
+| Hook | Runs Where | What it does |
+|------|------------|------|
+| `npx vitest run path/to/file.test.ts` | **AI terminal** ✅ | Targeted — one file only, minimal output |
+| `./hooks/pre-commit` | **User's machine** 🖥 | Full sweep: lint → type → all tests |
+| `./hooks/pre-push` | **User's machine** 🖥 | Secrets scan + pre-commit |
 
 ## TDD is Automatic
 
@@ -120,31 +133,22 @@ When agent-code is called, it automatically:
 1. Notifies user: "First calling agent-tdd to write tests..."
 2. Calls agent-tdd to write tests first
 3. Implements the feature based on tests
-4. Validates with pre-commit hook
+4. Validates with a **targeted** test command (not the full suite)
+5. Tells user to run `./hooks/pre-commit` locally
 
-This ensures all features are built test-first.
+This ensures all features are built test-first **without exhausting conversation tokens**.
 
-## Options
-
-- `--no-commit`: Don't create commit
-- `--skip-tdd`: Skip TDD and just write code
-- `--watch`: Run tests in watch mode during implementation
-
-## Integration with agent-tdd
-
-This agent automatically integrates with agent-tdd:
-
+**Correct flow:**
 ```
 User: /agent-code add login page
 → agent-code: First calling agent-tdd to write tests for login page...
 → agent-tdd: [Writes tests...]
 → agent-code: Tests ready. Implementing login page...
 → agent-code: [Implements feature...]
-→ agent-code: Running pre-commit validation...
-→ agent-code: Complete.
+→ agent-code: Running targeted test: npx vitest run src/app/login/__tests__/page.test.ts
+→ agent-code: ✅ Tests passed.
+→ agent-code: Please run `./hooks/pre-commit` locally before committing.
 ```
-
-This ensures TDD is always followed.
 
 ## Best Practices
 

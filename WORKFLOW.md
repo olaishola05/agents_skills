@@ -32,7 +32,7 @@ This is the end-to-end workflow for building software using your AI toolkit. You
 
 | Command | When to use it | What it does |
 | :--- | :--- | :--- |
-| `/agent-code [task]` | Ready to implement a task | **1. Auto-calls `agent-tdd`**: Writes failing tests first (Red).<br>**2. Implements**: Writes the code to make tests pass (Green).<br>**3. Validates**: Runs `hooks/pre-commit` to prove it compiles and tests pass. |
+| `/agent-code [task]` | Ready to implement a task | **1. Auto-calls `agent-tdd`**: Writes failing tests first (Red).<br>**2. Implements**: Writes the code to make tests pass (Green).<br>**3. Validates**: Runs `npx vitest run path/to/file.test.ts` (**targeted only** — no full suite in AI context).<br>**4. Instructs user**: Run `./hooks/pre-commit` locally before committing. |
 
 ---
 
