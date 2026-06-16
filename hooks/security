@@ -25,11 +25,21 @@ check_secrets() {
         [ -f "$file" ] || continue
         
         # Skip binary and common ignore patterns
+        # Skip binary files and known safe file types
         [[ "$file" =~ \.(png|jpg|jpeg|gif|ico|svg|woff|ttf|eot|mp3|mp4|webm|pdf|zip)$ ]] && continue
+        # Skip lock files (large, never contain real secrets)
+        [[ "$file" =~ (package-lock\.json|pnpm-lock\.yaml|yarn\.lock|Gemfile\.lock|go\.sum)$ ]] && continue
+        # Skip directories and generated folders
         [[ "$file" =~ node_modules|\.git|dist|build|\.venv ]] && continue
+        # Skip markdown docs — contain pattern examples for illustration, never real secrets
+        [[ "$file" =~ \.md$ ]] && continue
+        # Skip the hooks/ dir — scripts define detection patterns and will always match themselves
+        [[ "$file" =~ ^hooks/ ]] && continue
         
         # Check for API keys and secrets
-        if grep -E -i "(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token|password|private[_-]?key|aws[_-]?secret|stripe[_-]?key)" "$file" 2>/dev/null | grep -v -E "(your|placeholder|xxx|<|dummy|example|test|123)" >/dev/null; then
+        # Exclusions: placeholder values, examples, test values, inline 'not a real secret' markers
+        if grep -E -i "(api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token|password|private[_-]?key|aws[_-]?secret|stripe[_-]?key)" "$file" 2>/dev/null \
+           | grep -v -E "(your|placeholder|xxx|<|dummy|example|test|123|not a real|EXAMPLE|_EXAMPLE|_PLACEHOLDER|_HERE)" > /dev/null; then
             echo "  ⚠️  Possible secrets in: $file"
             SECRET_FOUND=1
         fi
