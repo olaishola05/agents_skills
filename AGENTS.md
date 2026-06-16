@@ -35,9 +35,9 @@ Personal development system containing reusable slash commands, skills, agents, 
 
 | Hook | Runs Where | What it does |
 |------|------------|------|
-| `pre-commit` | User's machine 🖥 | lint → typecheck → all tests → build |
-| `pre-push` | User's machine 🖥 | security scan → pre-commit |
-| `security` | User's machine 🖥 | Secrets detection only |
+| `pre-commit` | User's machine 🖥 | **security first** → lint → typecheck → all tests → (build) |
+| `pre-push` | User's machine 🖥 | security (again) → phase4 gate → pre-commit |
+| `security` | User's machine 🖥 | secrets scan + large file check + .env detection |
 
 Run manually on your machine: `./hooks/pre-commit`, `./hooks/pre-push`, `./hooks/security`
 

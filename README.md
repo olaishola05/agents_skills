@@ -79,9 +79,15 @@ All hooks run **on your local machine** — never inside an AI conversation.
 
 | Hook | Where | What it does |
 |------|-------|-------------|
-| `pre-commit` | Your machine 🖥 | lint → typecheck → all tests → (optional build) |
-| `pre-push` | Your machine 🖥 | secrets scan → pre-commit |
-| `security` | Your machine 🖥 | secrets + large file detection |
+| `pre-commit` | Your machine 🖥 | **security first** → lint → typecheck → all tests → (optional build) |
+| `pre-push` | Your machine 🖥 | security (again) → phase4 gate → pre-commit |
+| `security` | Your machine 🖥 | secrets scan + large files (>10 MB) + .env detection |
+
+> **Why security runs at commit time, not just at push time:**
+> A secret blocked only at push is still permanently recorded in your local git history.
+> Running security as the very first step of `pre-commit` means secrets **never enter the
+> history** in the first place. The `pre-push` security scan is a second line of defence
+> (belt-and-suspenders), not the primary gate.
 
 The global hook path is set once:
 ```bash

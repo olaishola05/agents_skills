@@ -1,7 +1,12 @@
 #!/bin/bash
 
-# Pre-commit hook - runs validation before commit
-# Usage: Run this script before git commit
+# Pre-commit hook - security scan FIRST, then code validation
+# Order: security → lint → typecheck → test → (optional build)
+#
+# Why security runs first:
+#   A secret that passes lint+tests but fails a push-time security check
+#   is still permanently recorded in git history. Running security at
+#   commit time ensures secrets NEVER enter the history in the first place.
 
 set -e
 
@@ -10,9 +15,35 @@ if [ "$1" == "--build" ]; then
     RUN_BUILD=1
 fi
 
-echo "🔍 Running validation..."
+# ── Colours ──────────────────────────────────────────────────
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+YELLOW="\033[1;33m"
+RESET="\033[0m"
 
-# Detect stack
+ok()   { echo -e "${GREEN}✅  $1${RESET}"; }
+fail() { echo -e "${RED}❌  $1${RESET}"; }
+warn() { echo -e "${YELLOW}⚠️   $1${RESET}"; }
+
+echo "🔍 Running pre-commit checks..."
+
+# ── Step 1: Security scan (MUST be first) ────────────────────
+echo ""
+echo "=== 🔒 Security Scan ==="
+
+HOOK_DIR="$(dirname "$0")"
+SECURITY_HOOK="$HOOK_DIR/security"
+
+if [ -x "$SECURITY_HOOK" ]; then
+    "$SECURITY_HOOK" || { fail "Security check failed — commit blocked."; exit 1; }
+else
+    warn "security hook not found at $SECURITY_HOOK — skipping (not recommended)"
+fi
+
+# ── Step 2: Stack detection ───────────────────────────────────
+echo ""
+echo "=== 🔧 Code Validation ==="
+
 detect_stack() {
     if [ -f "package.json" ]; then
         echo "node"
@@ -45,43 +76,44 @@ run_validation() {
             elif [ -f "bun.lockb" ]; then
                 PM="bun"
             fi
-            
+
             echo "🔧 Using package manager: $PM"
-            $PM run lint || { echo "❌ Lint failed"; exit 1; }
-            $PM run typecheck || { echo "❌ Typecheck failed"; exit 1; }
-            $PM run test || { echo "❌ Tests failed"; exit 1; }
+            $PM run lint      || { fail "Lint failed";      exit 1; }
+            $PM run typecheck || { fail "Typecheck failed"; exit 1; }
+            $PM run test      || { fail "Tests failed";     exit 1; }
             if [ "$RUN_BUILD" == "1" ]; then
-                $PM run build || { echo "❌ Build failed"; exit 1; }
+                $PM run build || { fail "Build failed"; exit 1; }
             else
-                echo "⏭️  Skipping build step (run with --build to include it)"
+                echo "⏭️  Skipping build (run with --build to include it)"
             fi
             ;;
         python)
             echo "🐍 Running Python validation..."
-            ruff check . || { echo "❌ Lint failed"; exit 1; }
-            mypy . || { echo "❌ Type check failed"; exit 1; }
-            pytest || { echo "❌ Tests failed"; exit 1; }
-            python -m py_compile . || { echo "❌ Syntax check failed"; exit 1; }
+            ruff check .          || { fail "Lint failed";        exit 1; }
+            mypy .                || { fail "Type check failed";  exit 1; }
+            pytest                || { fail "Tests failed";       exit 1; }
+            python -m py_compile . || { fail "Syntax check failed"; exit 1; }
             ;;
         ruby)
             echo "💎 Running Ruby validation..."
-            rubocop || { echo "❌ Lint failed"; exit 1; }
-            bundle exec rspec || { echo "❌ Tests failed"; exit 1; }
+            rubocop             || { fail "Lint failed";  exit 1; }
+            bundle exec rspec   || { fail "Tests failed"; exit 1; }
             ;;
         go)
             echo "🐹 Running Go validation..."
-            golangci-lint run || { echo "❌ Lint failed"; exit 1; }
-            go vet ./... || { echo "❌ Vet failed"; exit 1; }
-            go test ./... || { echo "❌ Tests failed"; exit 1; }
-            go build ./... || { echo "❌ Build failed"; exit 1; }
+            golangci-lint run   || { fail "Lint failed";  exit 1; }
+            go vet ./...        || { fail "Vet failed";   exit 1; }
+            go test ./...       || { fail "Tests failed"; exit 1; }
+            go build ./...      || { fail "Build failed"; exit 1; }
             ;;
         *)
-            echo "⚠️ Unknown stack, skipping validation"
+            warn "Unknown stack — skipping code validation"
             ;;
     esac
 }
 
 run_validation
 
-echo "✅ All validations passed!"
+echo ""
+ok "All pre-commit checks passed!"
 exit 0
